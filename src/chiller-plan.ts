@@ -15,8 +15,7 @@ export class ChillerPlan {
 
     @Property()
     public priceRange: string;
-
-    @Property()
     public tenderWinner: string;
+    public status:string;
 
 }

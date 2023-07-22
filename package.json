@@ -1,7 +1,7 @@
 {
   "name": "chiller",
-  "version": "0.0.1",
-  "description": "My Smart Contract",
+  "version": "0.0.2",
+  "description": "Chiller Plan",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "engines": {
@@ -18,7 +18,7 @@
     "prepublishOnly": "npm run build"
   },
   "engineStrict": true,
-  "author": "John Doe",
+  "author": "Mohamad Arif Cahyowibowo",
   "license": "Apache-2.0",
   "dependencies": {
     "fabric-contract-api": "^2.4.1",

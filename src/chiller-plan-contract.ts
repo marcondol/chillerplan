@@ -23,7 +23,7 @@ export class ChillerPlanContract extends Contract {
     }
 
     @Transaction()
-    public async createChillerPlan(ctx: Context, chillerPlanId: string, projectName: string, speckUrl:string, priceRange: string, tenderWinner: string): Promise<void> {
+    public async createChillerPlan(ctx: Context, chillerPlanId: string, projectName: string, speckUrl:string, priceRange: string): Promise<void> {
         const exists: boolean = await this.chillerPlanExists(ctx, chillerPlanId);
         if (exists) {
             throw new Error(`The chiller plan ${chillerPlanId} already exists`);
@@ -47,22 +47,34 @@ export class ChillerPlanContract extends Contract {
         if (!exists) {
             throw new Error(`The chiller plan ${chillerPlanId} does not exist`);
         }
-        const data: Uint8Array = await ctx.stub.getState(chillerPlanId);
+        const key = ctx.stub.createCompositeKey('project', [chillerPlanId]);
+
+        const data: Uint8Array = await ctx.stub.getState(key);
         const chillerPlan: ChillerPlan = JSON.parse(data.toString()) as ChillerPlan;
         return chillerPlan;
     }
 
-    // @Transaction()
-    // public async updateChillerPlan(ctx: Context, chillerPlanId: string, newValue: string): Promise<void> {
-    //     const exists: boolean = await this.chillerPlanExists(ctx, chillerPlanId);
-    //     if (!exists) {
-    //         throw new Error(`The chiller plan ${chillerPlanId} does not exist`);
-    //     }
-    //     const chillerPlan: ChillerPlan = new ChillerPlan();
-    //     chillerPlan.value = newValue;
-    //     const buffer: Buffer = Buffer.from(JSON.stringify(chillerPlan));
-    //     await ctx.stub.putState(chillerPlanId, buffer);
-    // }
+    // create function to get all chiller project
+    @Transaction(false)
+    @Returns('ChillerPlan')
+    public async getAllChillerPlan(ctx: Context): Promise<ChillerPlan[]> {
+        const allResults: Array<ChillerPlan> = [];
+        const iterator = await ctx.stub.getStateByRange('', '');
+        let result = await iterator.next();
+        while (!result.done) {
+            const strValue: string = Buffer.from(result.value.value.toString()).toString('utf8');
+            let record;
+            try {
+                record = JSON.parse(strValue);
+            } catch (err) {
+                console.log(err);
+                record = strValue;
+            }
+            allResults.push(record);
+            result = await iterator.next();
+        }
+        return allResults;
+    }
 
     @Transaction()
     public async deleteChillerPlan(ctx: Context, chillerPlanId: string): Promise<void> {

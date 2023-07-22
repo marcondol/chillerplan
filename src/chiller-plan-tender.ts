@@ -13,4 +13,11 @@ export class ChillerPlanTender {
     @Property()
     public tenderId: string;
 
+    @Property()
+    public description: string;
+    public status: string;
+
+    @Property()
+    public price: number;
+
 }

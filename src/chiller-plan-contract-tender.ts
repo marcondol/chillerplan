@@ -4,6 +4,8 @@
 
 import { Context, Contract, Info, Returns, Transaction } from 'fabric-contract-api';
 import { ChillerPlanTender } from './chiller-plan-tender';
+import { ChillerPlan } from './chiller-plan';
+
 
 @Info({title: 'ChillerPlanContractTender', description: 'Tender For Chiller plan' })
 export class ChillerPlanContractTender extends Contract {
@@ -12,7 +14,6 @@ export class ChillerPlanContractTender extends Contract {
         // Unique namespace when multiple contracts per chaincode file
         super('org.chiller.tender');
     }
-
 
     @Transaction(false)
     @Returns('boolean')
@@ -26,36 +27,69 @@ export class ChillerPlanContractTender extends Contract {
 
     @Transaction(false)
     @Returns('ChillerPlanTender')
-    public async readChillerPlan(ctx: Context, tenderId: string): Promise<ChillerPlanTender> {
+    public async readChillerPlanTender(ctx: Context, tenderId: string): Promise<{ chillerPlanTender: ChillerPlanTender , chillerPlan: ChillerPlan  }> {
         const exists: boolean = await this.chillerPlanTenderExists(ctx, tenderId);
         if (!exists) {
             throw new Error(`The tender ${tenderId} does not exist`);
         }
         const key = ctx.stub.createCompositeKey('tender', [tenderId]);
-
         const data: Uint8Array = await ctx.stub.getState(key);
-        const chillerPlan: ChillerPlanTender = JSON.parse(data.toString()) as ChillerPlanTender;
-        return chillerPlan;
+        const chillerPlanTender: ChillerPlanTender = JSON.parse(data.toString()) as ChillerPlanTender;
+        const keyProject = ctx.stub.createCompositeKey('project', [chillerPlanTender.chillerPlanId]);
+
+        const dataProject: Uint8Array = await ctx.stub.getState(keyProject);
+        const chillerPlan: ChillerPlan = JSON.parse(dataProject.toString()) as ChillerPlan;
+
+        return {chillerPlanTender, chillerPlan};
     }
 
     // transaction to create asset chillerplanTender
     @Transaction()
-    public async createChillerPlanTender(ctx: Context, chillerPlanId: string, tenderId: string): Promise<void> {
+    public async createChillerPlanTender(ctx: Context, chillerPlanId: string, tenderId: string, description: string, price: number): Promise<void> {
         const exists: boolean = await this.chillerPlanTenderExists(ctx, tenderId);
-        if (!exists) {
-            throw new Error(`The tender with  ${tenderId} does not exist`);
+        if (exists) {
+            throw new Error(`The tender with  ${tenderId} already exist`);
         }
         const key = ctx.stub.createCompositeKey('tender', [tenderId]);
 
         const chillerPlanTender: ChillerPlanTender = new ChillerPlanTender();
         chillerPlanTender.tenderId = tenderId;
         chillerPlanTender.chillerPlanId = chillerPlanId;
+        chillerPlanTender.status = 'CREATED';
+        chillerPlanTender.description = description;
+        chillerPlanTender.price = price;
+
         const buffer: Buffer = Buffer.from(JSON.stringify(chillerPlanTender));
         await ctx.stub.putState(key, buffer);
     }
 
+    @Transaction()
+    public async setTenderWinner(ctx: Context, chillerPlanId: string, tenderId: string, winnerId: string): Promise<void> {
+        const exists: boolean = await this.chillerPlanTenderExists(ctx, tenderId);
+        if (!exists) {
+            throw new Error(`The tender with  ${tenderId} does not exist`);
+        }
 
-    // @Transaction()
+        const keyTender = ctx.stub.createCompositeKey('tender', [tenderId]);
+        const data: Uint8Array = await ctx.stub.getState(keyTender);
+        const chillerPlanTender: ChillerPlanTender = JSON.parse(data.toString()) as ChillerPlanTender;
+        const keyProject = ctx.stub.createCompositeKey('project', [chillerPlanTender.chillerPlanId]);
+        const dataProject: Uint8Array = await ctx.stub.getState(keyProject);
+        const chillerPlan: ChillerPlan = JSON.parse(dataProject.toString()) as ChillerPlan;
+
+
+        chillerPlanTender.status = 'WON';
+        chillerPlan.status = 'FINISH';
+        chillerPlan.tenderWinner = tenderId;
+        const bufferTender: Buffer = Buffer.from(JSON.stringify(chillerPlanTender));
+        await ctx.stub.putState(keyTender, bufferTender);
+
+        const bufferProject: Buffer = Buffer.from(JSON.stringify(chillerPlan));
+        await ctx.stub.putState(keyProject, bufferProject);
+    }
+
+
+     // @Transaction()
     // public async updateChillerPlan(ctx: Context, chillerPlanId: string, newValue: string): Promise<void> {
     //     const exists: boolean = await this.chillerPlanExists(ctx, chillerPlanId);
     //     if (!exists) {
@@ -66,6 +100,5 @@ export class ChillerPlanContractTender extends Contract {
     //     const buffer: Buffer = Buffer.from(JSON.stringify(chillerPlan));
     //     await ctx.stub.putState(chillerPlanId, buffer);
     // }
-
 
 }
