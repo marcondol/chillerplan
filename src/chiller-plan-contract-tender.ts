@@ -64,7 +64,7 @@ export class ChillerPlanContractTender extends Contract {
     }
 
     @Transaction()
-    public async setTenderWinner(ctx: Context, chillerPlanId: string, tenderId: string, winnerId: string): Promise<void> {
+    public async setTenderWinner(ctx: Context,tenderId: string): Promise<void> {
         const exists: boolean = await this.chillerPlanTenderExists(ctx, tenderId);
         if (!exists) {
             throw new Error(`The tender with  ${tenderId} does not exist`);
