@@ -1,0 +1,44 @@
+[
+    {
+        "transactionName": "chillerPlanExists",
+        "transactionLabel": "A test chillerPlanExists transaction",
+        "arguments": [
+            "001"
+        ],
+        "transientData": {}
+    },
+    {
+        "transactionName": "createChillerPlan",
+        "transactionLabel": "A test createChillerPlan transaction",
+        "arguments": [
+            "001",
+            "some value"
+        ],
+        "transientData": {}
+    },
+    {
+        "transactionName": "readChillerPlan",
+        "transactionLabel": "A test readChillerPlan transaction",
+        "arguments": [
+            "001"
+        ],
+        "transientData": {}
+    },
+    {
+        "transactionName": "updateChillerPlan",
+        "transactionLabel": "A test updateChillerPlan transaction",
+        "arguments": [
+            "001",
+            "some other value"
+        ],
+        "transientData": {}
+    },
+    {
+        "transactionName": "deleteChillerPlan",
+        "transactionLabel": "A test deleteChillerPlan transaction",
+        "arguments": [
+            "001"
+        ],
+        "transientData": {}
+    }
+]
